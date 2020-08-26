@@ -248,7 +248,7 @@ namespace OpenSage.Mods.Generals.Gui
                         buttonControl.BackgroundImage = controlBar._window.ImageLoader.CreateFromMappedImageReference(commandButton.ButtonImage);
 
                         buttonControl.DisabledBackgroundImage = buttonControl.BackgroundImage?.WithGrayscale(true);
-
+                        
                         buttonControl.BorderColor = GetBorderColor(commandButton.ButtonBorderType, controlBar._scheme).ToColorRgbaF();
                         buttonControl.BorderWidth = 1;
 
@@ -272,7 +272,7 @@ namespace OpenSage.Mods.Generals.Gui
                                 var upgrade = commandButton.Upgrade.Value;
                                 var userHasEnoughMoney = selectedUnit.Owner.Money >= upgrade.BuildCost;
                                 var hasQueuedUpgrade = selectedUnit.ProductionUpdate.ProductionQueue.Any(x => x.UpgradeDefinition == upgrade);
-                                var canEnqueue = selectedUnit.ProductionUpdate.CanEnque();
+                                var canEnqueue = selectedUnit.ProductionUpdate.CanEnqueue();
                                 var hasUpgrade = selectedUnit.UpgradeAvailable(upgrade);
                                 var upgradeIsInvalid = selectedUnit.ConflictingUpgradeAvailable(upgrade);
 

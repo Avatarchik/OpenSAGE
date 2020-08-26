@@ -53,19 +53,15 @@ namespace OpenSage.Logic.Object
             SetHealth(Health - actualDamage);
 
             // TODO: DamageFX
-            // if we only have the ArmorSet from 'DefaultThingTemplate' we do not have a valid DamageFX
-            if (armorSet.DamageFX.Value != null)
-            {
-                var damageFXGroup = armorSet.DamageFX.Value.GetGroup(damageType);
+            var damageFXGroup = armorSet.DamageFX.Value.GetGroup(damageType);
 
-                // TODO: MajorFX
-                var damageFX = damageFXGroup.MinorFX?.Value;
-                damageFX?.Execute(
-                    new FXListExecutionContext(
-                        GameObject.Transform.Rotation,
-                        GameObject.Transform.Translation,
-                        GameObject.GameContext));
-            }
+            // TODO: MajorFX
+            var damageFX = damageFXGroup.MinorFX?.Value;
+            damageFX?.Execute(
+                new FXListExecutionContext(
+                    GameObject.Transform.Rotation,
+                    GameObject.Transform.Translation,
+                    GameObject.GameContext));
 
             if (Health <= Fix64.Zero)
             {

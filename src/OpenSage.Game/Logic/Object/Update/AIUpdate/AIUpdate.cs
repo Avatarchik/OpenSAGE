@@ -19,7 +19,7 @@ namespace OpenSage.Logic.Object
 
         protected readonly GameObject GameObject;
 
-        private readonly List<BehaviorModule> _childBehaviors;
+        private readonly BehaviorModule _turretAIUpdate;
 
         /// <summary>
         /// An enumerator of the waypoints if the unit is currently following a waypoint path.
@@ -45,10 +45,9 @@ namespace OpenSage.Logic.Object
 
             SetLocomotor(LocomotorSetType.Normal);
 
-            _childBehaviors = new List<BehaviorModule>();
             if (_moduleData.Turret != null)
             {
-                _childBehaviors.Add(_moduleData.Turret.CreateTurretAIUpdate(GameObject));
+                _turretAIUpdate = _moduleData.Turret.CreateTurretAIUpdate(GameObject);
             }
         }
 
@@ -145,7 +144,20 @@ namespace OpenSage.Logic.Object
 
         internal override void Update(BehaviorUpdateContext context)
         {
-            foreach (var childBehavior in _childBehaviors) childBehavior.Update(context);
+            if (_turretAIUpdate != null)
+            {
+                _turretAIUpdate.Update(context);
+            }
+            //else
+            //{
+            //    var target = GameObject.CurrentWeapon.CurrentTarget;
+            //    if (target != null)
+            //    {
+            //        var directionToTarget = (target.TargetPosition - GameObject.Transform.Translation).Vector2XY();
+            //        // TODO: rebase onto locomotion branch
+            //        //SetTargetDirection();
+            //    }
+            //}
 
             if (_currentLocomotor != null && TargetPoints.Count > 0)
             {
