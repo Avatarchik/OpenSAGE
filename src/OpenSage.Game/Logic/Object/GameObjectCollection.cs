@@ -7,12 +7,14 @@ namespace OpenSage.Logic.Object
     public sealed class GameObjectCollection : DisposableBase
     {
         private readonly GameContext _gameContext;
-        private readonly List<GameObject> _items;
+        private readonly Dictionary<int, GameObject> _items;
         private readonly Dictionary<string, GameObject> _nameLookup;
+        private readonly List<int> _destroyList;
         private readonly Player _civilianPlayer;
         private readonly Navigation.Navigation _navigation;
+        private int _nextObjectId;
 
-        public IReadOnlyList<GameObject> Items => _items;
+        public IEnumerable<GameObject> Items => _items.Values;
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -22,10 +24,12 @@ namespace OpenSage.Logic.Object
             Navigation.Navigation navigation)
         {
             _gameContext = gameContext;
-            _items = new List<GameObject>();
+            _items = new Dictionary<int, GameObject>();
             _nameLookup = new Dictionary<string, GameObject>();
+            _destroyList = new List<int>();
             _civilianPlayer = civilianPlayer;
             _navigation = navigation;
+            _nextObjectId = 0;
         }
 
         public GameObject Add(string typeName, Player player)
@@ -50,7 +54,8 @@ namespace OpenSage.Logic.Object
         {
             var gameObject = AddDisposable(new GameObject(objectDefinition, _gameContext, player, this));
 
-            _items.Add(gameObject);
+            _items.Add(_nextObjectId, gameObject);
+            _nextObjectId++;
 
             _gameContext.Radar.AddGameObject(gameObject);
 
@@ -65,7 +70,7 @@ namespace OpenSage.Logic.Object
         // TODO: This is probably not how real SAGE works.
         public int GetObjectId(GameObject gameObject)
         {
-            return _items.IndexOf(gameObject) + 1;
+            return _items.FirstOrDefault(x => x.Value == gameObject).Key;
         }
 
         public List<int> GetObjectIds(IEnumerable<GameObject> gameObjects)
@@ -81,7 +86,7 @@ namespace OpenSage.Logic.Object
 
         public GameObject GetObjectById(int objectId)
         {
-            return _items[objectId - 1];
+            return _items[objectId];
         }
 
         public bool TryGetObjectByName(string name, out GameObject gameObject)
@@ -91,12 +96,35 @@ namespace OpenSage.Logic.Object
 
         public List<GameObject> GetObjectsByKindOf(ObjectKinds kindOf)
         {
-            return _items.Where(x => x.Definition.KindOf.Get(kindOf)).ToList();
+            var result = new List<GameObject>();
+            foreach (var match in _items.Where(x => x.Value.Definition.KindOf.Get(kindOf)))
+            {
+                result.Add(match.Value);
+            }
+            return result;
         }
 
         public void AddNameLookup(GameObject gameObject)
         {
             _nameLookup[gameObject.Name ?? throw new ArgumentException("Cannot add lookup for unnamed object.")] = gameObject;
+        }
+
+        public void DeleteDestroyed()
+        {
+            _destroyList.Clear();
+            foreach (var item in _items)
+            {
+                if (item.Value.Destroyed == true)
+                {
+                    _gameContext.Radar.RemoveGameObject(item.Value);
+                    _destroyList.Add(item.Key);
+                }
+            }
+
+            foreach (var objectId in _destroyList)
+            {
+                _items.Remove(objectId);
+            }
         }
     }
 }

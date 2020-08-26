@@ -380,13 +380,12 @@ namespace OpenSage
 
         internal void LogicTick(ulong frame, in TimeInterval time)
         {
-            var currentCount = GameObjects.Items.Count;
-            for (var index = 0; index < currentCount; index++)
+            foreach (var gameObject in GameObjects.Items)
             {
-                var gameObject = GameObjects.Items[index];
                 gameObject.LogicTick(frame, time);
             }
 
+            GameObjects.DeleteDestroyed();
             //DetectCollisions(time);
         }
 
@@ -396,13 +395,10 @@ namespace OpenSage
 
             var numCollisions = 0;
 
-            for (var i = 0; i < GameObjects.Items.Count; i++)
+            foreach (var gameObject1 in GameObjects.Items)
             {
-                for (var j = i + 1; j < GameObjects.Items.Count; j++)
+                foreach (var gameObject2 in GameObjects.Items)
                 {
-                    var gameObject1 = GameObjects.Items[i];
-                    var gameObject2 = GameObjects.Items[j];
-
                     if (gameObject1.Intersects(gameObject2))
                     {
                         gameObject1.DoCollide(gameObject2, time);
@@ -418,9 +414,8 @@ namespace OpenSage
         {
             _orderGeneratorInputHandler?.Update();
 
-            for (int i = 0; i < GameObjects.Items.Count; i++)
+            foreach (var gameObject in GameObjects.Items)
             {
-                var gameObject = GameObjects.Items[i];
                 gameObject.LocalLogicTick(gameTime, tickT, Terrain?.HeightMap);
             }
 
