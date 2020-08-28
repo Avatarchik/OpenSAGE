@@ -165,6 +165,8 @@ namespace OpenSage.Logic.Object
 
         private TimeSpan ConstructionStart { get; set; }
 
+        public TimeSpan? LifeTime { get; set; }
+
         public float BuildProgress { get; set; }
 
         public bool Destroyed { get; set; }
@@ -437,7 +439,7 @@ namespace OpenSage.Logic.Object
                 var passed = gameTime.TotalTime - ConstructionStart;
                 BuildProgress = Math.Clamp((float) passed.TotalSeconds / Definition.BuildTime, 0.0f, 1.0f);
 
-                if (BuildProgress == 1.0f)
+                if (Math.Abs(BuildProgress - 1.0f) < 0.01f)
                 {
                     FinishConstruction();
                 }
@@ -575,6 +577,13 @@ namespace OpenSage.Logic.Object
         {
             if (Destroyed)
             {
+                return;
+            }
+
+            if (LifeTime != null && gameTime.TotalTime > LifeTime)
+            {
+                Die(DeathType.Normal, gameTime);
+                Destroyed = true;
                 return;
             }
 
@@ -770,6 +779,8 @@ namespace OpenSage.Logic.Object
             ModelConditionFlags.Set(ModelConditionFlag.ReallyDamaged, false);
             ModelConditionFlags.Set(ModelConditionFlag.Damaged, false);
 
+            IsSelectable = false;
+
             // TODO: Can we avoid updating this every time?
             _behaviorUpdateContext.UpdateTime(time);
 
@@ -803,6 +814,10 @@ namespace OpenSage.Logic.Object
 
         internal void Destroy()
         {
+            foreach (var drawModule in _drawModules)
+            {
+                drawModule.Dispose();
+            }
             Destroyed = true;
         }
 
