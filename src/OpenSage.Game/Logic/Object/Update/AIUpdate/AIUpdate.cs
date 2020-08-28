@@ -148,53 +148,56 @@ namespace OpenSage.Logic.Object
             {
                 _turretAIUpdate.Update(context);
             }
-            //else
-            //{
-            //    var target = GameObject.CurrentWeapon.CurrentTarget;
-            //    if (target != null)
-            //    {
-            //        var directionToTarget = (target.TargetPosition - GameObject.Transform.Translation).Vector2XY();
-            //        // TODO: rebase onto locomotion branch
-            //        //SetTargetDirection();
-            //    }
-            //}
-
-            if (_currentLocomotor != null && TargetPoints.Count > 0)
-            {
-                Vector3? nextPoint = null;
-
-                if (TargetPoints.Count > 1)
-                {
-                    nextPoint = TargetPoints[1];
-                }
-
-                var reachedPosition = _currentLocomotor.MoveTowardsPosition(context.Time, TargetPoints[0], context.GameContext.Terrain.HeightMap, nextPoint);
-
-                // this should be moved to LogicTick
-                if (reachedPosition)
-                {
-                    Logger.Debug($"Reached point {TargetPoints[0]}");
-                    TargetPoints.RemoveAt(0);
-                    if (TargetPoints.Count == 0)
-                    {
-                        MoveToNextWaypointOrStop();
-                    }
-                }
-            }
-            else if (_targetDirection.HasValue)
-            {
-                if (!_currentLocomotor.RotateToTargetDirection(context.Time, _targetDirection.Value))
-                {
-                    return;
-                }
-
-                _targetDirection = null;
-                Stop();
-            }
             else
             {
-                // maintain position (jets etc)
-                _currentLocomotor.MaintainPosition(context.Time, context.GameContext.Terrain.HeightMap);
+                var target = GameObject.CurrentWeapon?.CurrentTarget;
+                if (target != null)
+                {
+                    var directionToTarget = (target.TargetPosition - GameObject.Transform.Translation).Vector2XY();
+                    // TODO: rebase onto locomotion branch
+                    //SetTargetDirection();
+                }
+            }
+
+            if (_currentLocomotor != null)
+            {
+                if (TargetPoints.Count > 0)
+                {
+                    Vector3? nextPoint = null;
+
+                    if (TargetPoints.Count > 1)
+                    {
+                        nextPoint = TargetPoints[1];
+                    }
+
+                    var reachedPosition = _currentLocomotor.MoveTowardsPosition(context.Time, TargetPoints[0], context.GameContext.Terrain.HeightMap, nextPoint);
+
+                    // this should be moved to LogicTick
+                    if (reachedPosition)
+                    {
+                        Logger.Debug($"Reached point {TargetPoints[0]}");
+                        TargetPoints.RemoveAt(0);
+                        if (TargetPoints.Count == 0)
+                        {
+                            MoveToNextWaypointOrStop();
+                        }
+                    }
+                }
+                else if (_targetDirection.HasValue)
+                {
+                    if (!_currentLocomotor.RotateToTargetDirection(context.Time, _targetDirection.Value))
+                    {
+                        return;
+                    }
+
+                    _targetDirection = null;
+                    Stop();
+                }
+                else
+                {
+                    // maintain position (jets etc)
+                    _currentLocomotor.MaintainPosition(context.Time, context.GameContext.Terrain.HeightMap);
+                }
             }
         }
 
