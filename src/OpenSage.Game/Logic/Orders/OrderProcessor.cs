@@ -67,7 +67,7 @@ namespace OpenSage.Logic.Orders
                             var objectDefinitionId = order.Arguments[0].Value.Integer;
                             var upgradeDefinitionId = order.Arguments[1].Value.Integer;
 
-                            var gameObject = _game.Scene3D.GameObjects.GetObjectById(objectDefinitionId);
+                            var gameObject = _game.Scene3D.GameObjects.GetObjectById((uint)objectDefinitionId);
                             var upgradeDefinition = _game.AssetStore.Upgrades.GetByInternalId(upgradeDefinitionId);
                             player.SpendMoney((uint) upgradeDefinition.BuildCost);
 
@@ -148,7 +148,7 @@ namespace OpenSage.Logic.Orders
                         try
                         {
                             var objectIds = order.Arguments.Skip(1)
-                                .Select(x => (int) x.Value.ObjectId)
+                                .Select(x => x.Value.ObjectId)
                                 .Select(_game.Scene3D.GameObjects.GetObjectById)
                                 .ToArray();
 
@@ -169,7 +169,7 @@ namespace OpenSage.Logic.Orders
                     case OrderType.ForceAttackObject:
                         {
                             var objectDefinitionId = order.Arguments[0].Value.Integer;
-                            var gameObject = _game.Scene3D.GameObjects.GetObjectById(objectDefinitionId);
+                            var gameObject = _game.Scene3D.GameObjects.GetObjectById((uint)objectDefinitionId);
 
                             foreach (var unit in player.SelectedUnits)
                             {
@@ -200,7 +200,7 @@ namespace OpenSage.Logic.Orders
                             if (order.Arguments.Count == 2)
                             {
                                 var objId = order.Arguments[0].Value.ObjectId;
-                                var obj = _game.Scene3D.GameObjects.GetObjectById((int) objId);
+                                var obj = _game.Scene3D.GameObjects.GetObjectById(objId);
 
                                 var rallyPoint = order.Arguments[1].Value.Position;
                                 obj.RallyPoint = rallyPoint;
@@ -208,7 +208,7 @@ namespace OpenSage.Logic.Orders
                             else
                             {
                                 var objIds = order.Arguments.Skip(1)
-                                    .Select(x => (int) x.Value.ObjectId)
+                                    .Select(x => x.Value.ObjectId)
                                     .Select(_game.Scene3D.GameObjects.GetObjectById)
                                     .ToArray();
                                 _game.Selection.SetRallyPointForSelectedObjects(player, objIds, new Vector3());

@@ -191,12 +191,12 @@ namespace OpenSage.Scripting
             //Add code here
         }
 
-        public int GetLuaObjectID(string gameObject)
+        public uint GetLuaObjectID(string gameObject)
         {
-            return int.Parse(gameObject.Replace("ObjID#", ""), System.Globalization.NumberStyles.HexNumber);
+            return uint.Parse(gameObject.Replace("ObjID#", ""), System.Globalization.NumberStyles.HexNumber);
         }
 
-        public string GetLuaObjectIndex(int ObjectID)
+        public string GetLuaObjectIndex(uint ObjectID)
         {
             return String.Concat("ObjID#", ObjectID.ToString("X8"));
         }
@@ -361,11 +361,11 @@ namespace OpenSage.Scripting
 
         public string ObjectDescription(string gameObject)  //EXAMPLE C&C3: "Object 1187 (_jIWv4) [NODAvatar, owned by player 3 (MetaIdea)]"
         {
-            int ObjectID = Game.Scene3D.GameObjects.GetObjectId(Game.Scene3D.GameObjects.GetObjectById(GetLuaObjectID(gameObject)));
-            string ObjectNameRef = "TODO";
-            string ObjectTypeName = Game.Scene3D.GameObjects.GetObjectById(GetLuaObjectID(gameObject)).Definition.Name;
-            string PlayerIndex = "TODO";
-            string PlayerName = Game.Scene3D.GameObjects.GetObjectById(GetLuaObjectID(gameObject)).Owner.Name;
+            var ObjectID = Game.Scene3D.GameObjects.GetObjectId(Game.Scene3D.GameObjects.GetObjectById(GetLuaObjectID(gameObject)));
+            var ObjectNameRef = "TODO";
+            var ObjectTypeName = Game.Scene3D.GameObjects.GetObjectById(GetLuaObjectID(gameObject)).Definition.Name;
+            var PlayerIndex = "TODO";
+            var PlayerName = Game.Scene3D.GameObjects.GetObjectById(GetLuaObjectID(gameObject)).Owner.Name;
             return $"Object {ObjectID} ({ObjectNameRef} [{ObjectTypeName}, owend by player {PlayerIndex} ({PlayerName})]";
         }
 

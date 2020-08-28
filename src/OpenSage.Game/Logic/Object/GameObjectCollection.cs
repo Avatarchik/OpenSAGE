@@ -7,14 +7,23 @@ namespace OpenSage.Logic.Object
     public sealed class GameObjectCollection : DisposableBase
     {
         private readonly GameContext _gameContext;
-        private readonly Dictionary<int, GameObject> _items;
+        private readonly Dictionary<uint, GameObject> _items;
         private readonly Dictionary<string, GameObject> _nameLookup;
-        private readonly List<int> _destroyList;
+        private readonly List<GameObject> _createList;
+        private readonly List<uint> _destroyList;
         private readonly Player _civilianPlayer;
         private readonly Navigation.Navigation _navigation;
-        private int _nextObjectId;
+        private uint _nextObjectId;
 
-        public IEnumerable<GameObject> Items => _items.Values;
+        public IEnumerable<GameObject> Items
+        {
+            get
+            {
+                InsertCreated();
+                DeleteDestroyed();
+                return _items.Values;
+            }
+        }
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -24,12 +33,18 @@ namespace OpenSage.Logic.Object
             Navigation.Navigation navigation)
         {
             _gameContext = gameContext;
-            _items = new Dictionary<int, GameObject>();
+            _items = new Dictionary<uint, GameObject>();
             _nameLookup = new Dictionary<string, GameObject>();
-            _destroyList = new List<int>();
+            _destroyList = new List<uint>();
+            _createList = new List<GameObject>();
             _civilianPlayer = civilianPlayer;
             _navigation = navigation;
             _nextObjectId = 0;
+        }
+
+        public GameObject Add(string typeName)
+        {
+            return Add(typeName, _civilianPlayer);
         }
 
         public GameObject Add(string typeName, Player player)
@@ -45,37 +60,27 @@ namespace OpenSage.Logic.Object
             return Add(definition, player);
         }
 
-        public GameObject Add(string typeName)
-        {
-            return Add(typeName, _civilianPlayer);
-        }
-
-        public GameObject Add(ObjectDefinition objectDefinition, Player player)
-        {
-            var gameObject = AddDisposable(new GameObject(objectDefinition, _gameContext, player, this));
-
-            _items.Add(_nextObjectId, gameObject);
-            _nextObjectId++;
-
-            _gameContext.Radar.AddGameObject(gameObject);
-
-            return gameObject;
-        }
-
         public GameObject Add(ObjectDefinition objectDefinition)
         {
             return Add(objectDefinition, _civilianPlayer);
         }
 
+        public GameObject Add(ObjectDefinition objectDefinition, Player player)
+        {
+            var gameObject = AddDisposable(new GameObject(objectDefinition, _gameContext, player, this));
+            _createList.Add(gameObject);
+            return gameObject;
+        }
+
         // TODO: This is probably not how real SAGE works.
-        public int GetObjectId(GameObject gameObject)
+        public uint GetObjectId(GameObject gameObject)
         {
             return _items.FirstOrDefault(x => x.Value == gameObject).Key;
         }
 
-        public List<int> GetObjectIds(IEnumerable<GameObject> gameObjects)
+        public List<uint> GetObjectIds(IEnumerable<GameObject> gameObjects)
         {
-            var objIds = new List<int>();
+            var objIds = new List<uint>();
             foreach (var gameObject in gameObjects)
             {
                 objIds.Add(GetObjectId(gameObject));
@@ -84,7 +89,7 @@ namespace OpenSage.Logic.Object
             return objIds;
         }
 
-        public GameObject GetObjectById(int objectId)
+        public GameObject GetObjectById(uint objectId)
         {
             return _items[objectId];
         }
@@ -109,21 +114,33 @@ namespace OpenSage.Logic.Object
             _nameLookup[gameObject.Name ?? throw new ArgumentException("Cannot add lookup for unnamed object.")] = gameObject;
         }
 
-        public void DeleteDestroyed()
+        private void InsertCreated()
+        {
+            foreach (var gameObject in _createList)
+            {
+                _gameContext.Radar.AddGameObject(gameObject, _nextObjectId);
+                _items.Add(_nextObjectId++, gameObject);
+            }
+            _createList.Clear();
+        }
+
+        private void DeleteDestroyed()
         {
             _destroyList.Clear();
-            foreach (var item in _items)
+            foreach (var (objectId, gameObject) in _items)
             {
-                if (item.Value.Destroyed == true)
+                if (!gameObject.Destroyed)
                 {
-                    _gameContext.Radar.RemoveGameObject(item.Value);
-                    _destroyList.Add(item.Key);
+                    continue;
                 }
+
+                _gameContext.Radar.RemoveGameObject(gameObject);
+                _destroyList.Add(objectId);
             }
 
             foreach (var objectId in _destroyList)
             {
-                _items.Remove(objectId);
+                _items.Remove(objectId, out var _);
             }
         }
     }

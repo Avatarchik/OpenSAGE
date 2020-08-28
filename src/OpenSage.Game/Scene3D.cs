@@ -385,7 +385,6 @@ namespace OpenSage
                 gameObject.LogicTick(frame, time);
             }
 
-            GameObjects.DeleteDestroyed();
             //DetectCollisions(time);
         }
 
